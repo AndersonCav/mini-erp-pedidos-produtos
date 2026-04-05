@@ -14,3 +14,36 @@
 [2026-04-05 18:52:32] INFO: Aplicação inicializada
 [2026-04-05 18:52:36] INFO: Aplicação inicializada
 [2026-04-05 18:52:38] INFO: Aplicação inicializada
+[2026-04-05 19:17:38] INFO: Aplicação inicializada
+[2026-04-05 19:17:39] INFO: Aplicação inicializada
+[2026-04-05 19:17:41] INFO: Aplicação inicializada
+[2026-04-05 19:17:43] INFO: Aplicação inicializada
+[2026-04-05 19:17:44] INFO: Aplicação inicializada
+[2026-04-05 19:17:46] INFO: Aplicação inicializada
+[2026-04-05 19:17:47] INFO: Aplicação inicializada
+[2026-04-05 19:17:49] INFO: Aplicação inicializada
+[2026-04-05 19:19:41] INFO: Aplicação inicializada
+[2026-04-05 19:19:41] INFO: Aplicação inicializada
+[2026-04-05 19:19:59] INFO: Aplicação inicializada
+[2026-04-05 19:19:59] WARNING: Webhook token not provided
+[2026-04-05 19:20:00] INFO: Aplicação inicializada
+[2026-04-05 19:20:00] WARNING: Webhook token not provided
+[2026-04-05 19:20:00] INFO: Order created: #1
+[2026-04-05 19:20:00] INFO: Order #1 status changed to: processando
+[2026-04-05 19:20:00] INFO: Order #1 cancelled
+[2026-04-05 19:20:12] INFO: Aplicação inicializada
+[2026-04-05 19:20:12] WARNING: Webhook token not provided
+[2026-04-05 19:20:12] INFO: Order created: #2
+[2026-04-05 19:20:12] INFO: Order #2 status changed to: processando
+[2026-04-05 19:20:12] INFO: Order #2 cancelled
+[2026-04-05 19:21:30] INFO: Aplicação inicializada
+[2026-04-05 19:21:32] INFO: Aplicação inicializada
+[2026-04-05 19:21:33] INFO: Aplicação inicializada
+[2026-04-05 19:21:35] INFO: Aplicação inicializada
+[2026-04-05 19:23:52] INFO: Aplicação inicializada
+[2026-04-05 19:23:54] INFO: Aplicação inicializada
+[2026-04-05 19:23:55] INFO: Aplicação inicializada
+[2026-04-05 19:23:56] INFO: Aplicação inicializada
+[2026-04-05 19:23:57] INFO: Aplicação inicializada
+[2026-04-05 19:23:58] INFO: Aplicação inicializada
+[2026-04-05 19:24:02] INFO: Aplicação inicializada
