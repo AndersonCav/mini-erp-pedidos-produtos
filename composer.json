@@ -1,0 +1,19 @@
+{
+  "name": "anderson-cav/mini-erp-pedidos-produtos",
+  "description": "Mini ERP para gerenciamento de pedidos, produtos, cupons e estoque em PHP puro com MVC artesanal",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Anderson Cavalcante",
+      "email": "anderson@example.com"
+    }
+  ],
+  "require": {
+    "php": "^7.4|^8.0"
+  },
+  "scripts": {
+    "start": "php -S localhost:8000 -t public/",
+    "test": "echo 'Tests not configured yet'"
+  }
+}

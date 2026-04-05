@@ -1,56 +1,101 @@
 <?php
-    require_once '../config/database.php';
-    class Cupom {
-        public static function salvar($dados) {
-            global $conn;
-            $codigo = $conn->real_escape_string($dados['codigo']);
-            $valor = floatval($dados['valor_desconto']);
-            $minimo = floatval($dados['minimo_subtotal']);
-            $validade = $conn->real_escape_string($dados['validade']);
-            $res = $conn->query("SELECT * FROM cupons WHERE codigo = '$codigo'");
-            if ($res->num_rows > 0) {
-                $sql = "UPDATE cupons SET valor_desconto = $valor, minimo_subtotal = $minimo, validade = '$validade' WHERE codigo = '$codigo'";
+/**
+ * Cupom.php (REFATORADO)
+ * Model mantido por compatibilidade, delega para Repository + Service
+ */
+
+require_once __DIR__ . '/../repositories/CouponRepository.php';
+require_once __DIR__ . '/../services/CouponService.php';
+
+class Cupom {
+    private static $service;
+
+    private static function getService() {
+        if (!self::$service) {
+            self::$service = new CouponService();
+        }
+        return self::$service;
+    }
+
+    /**
+     * Salva/atualiza cupom
+     */
+    public static function salvar($dados) {
+        try {
+            $repo = new CouponRepository();
+            $codigo = $dados['codigo'];
+
+            // Verifica se já existe
+            $existing = $repo->findByCode($codigo);
+
+            if ($existing) {
+                $repo->update(
+                    $codigo,
+                    floatval($dados['valor_desconto']),
+                    floatval($dados['minimo_subtotal']),
+                    $dados['validade']
+                );
             } else {
-                $sql = "INSERT INTO cupons (codigo, valor_desconto, minimo_subtotal, validade) VALUES ('$codigo', $valor, $minimo, '$validade')";
+                $repo->create(
+                    $codigo,
+                    floatval($dados['valor_desconto']),
+                    floatval($dados['minimo_subtotal']),
+                    $dados['validade']
+                );
             }
-            $conn->query($sql);
+
+            Logger::info("Coupon saved: $codigo");
+        } catch (Exception $e) {
+            Logger::error('Coupon save error: ' . $e->getMessage());
+            throw $e;
         }
-        public static function validar($codigo, $subtotal) {
-            global $conn;
-            $codigo = $conn->real_escape_string($codigo);
-            $res = $conn->query("SELECT * FROM cupons WHERE codigo = '$codigo' AND validade >= CURDATE() AND minimo_subtotal <= $subtotal LIMIT 1");
-            return $res->fetch_assoc();
-        }
-        public static function todos() {
-            global $conn;
-            $filtros = [];
-            $ordem_sql = "validade DESC";
-            if (!empty($_GET['busca'])) {
-                $busca = $conn->real_escape_string($_GET['busca']);
-                $filtros[] = "codigo LIKE '%$busca%'";
+    }
+
+    /**
+     * Valida cupom com desconto
+     */
+    public static function validar($codigo, $subtotal) {
+        try {
+            $result = self::getService()->validate($codigo, $subtotal);
+            if ($result['valid']) {
+                return $result['coupon'];
             }
+            return null;
+        } catch (Exception $e) {
+            Logger::error('Coupon validation error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Busca todos os cupons com filtros
+     */
+    public static function todos() {
+        try {
+            $search = $_GET['busca'] ?? '';
+            $orderBy = 'validade DESC';
+
             if (!empty($_GET['ordenar'])) {
                 switch ($_GET['ordenar']) {
                     case 'valor_maior':
-                        $ordem_sql = "valor_desconto DESC";
+                        $orderBy = 'valor_desconto DESC';
                         break;
                     case 'valor_menor':
-                        $ordem_sql = "valor_desconto ASC";
+                        $orderBy = 'valor_desconto ASC';
                         break;
                     case 'validade_maior':
-                        $ordem_sql = "validade DESC";
+                        $orderBy = 'validade DESC';
                         break;
                     case 'validade_menor':
-                        $ordem_sql = "validade ASC";
+                        $orderBy = 'validade ASC';
                         break;
                 }
             }
-            $sql = "SELECT * FROM cupons";
-            if ($filtros) {
-                $sql .= " WHERE " . implode(" AND ", $filtros);
-            }
-            $sql .= " ORDER BY $ordem_sql";
-            $res = $conn->query($sql);
-            return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+
+            return (new CouponRepository())->findFiltered($search, $orderBy);
+        } catch (Exception $e) {
+            Logger::error('Coupon list error: ' . $e->getMessage());
+            return [];
         }
     }
+}

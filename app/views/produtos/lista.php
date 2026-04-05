@@ -1,5 +1,49 @@
 <?php require '../app/views/shared/header.php'; ?>
 <div class="container mt-4">
+    <?php
+        $totalProdutos = count($produtos ?? []);
+        $somaPrecos = 0;
+        if (!empty($produtos)) {
+            foreach ($produtos as $item) {
+                $somaPrecos += (float) ($item['preco'] ?? 0);
+            }
+        }
+        $ticketMedio = $totalProdutos > 0 ? $somaPrecos / $totalProdutos : 0;
+        $catalogoAltoValor = 0;
+        if (!empty($produtos)) {
+            foreach ($produtos as $item) {
+                if ((float) ($item['preco'] ?? 0) >= 1000) {
+                    $catalogoAltoValor++;
+                }
+            }
+        }
+    ?>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 h-100">
+                <div class="card-body">
+                    <span class="text-muted">Produtos na listagem</span>
+                    <h4 class="mb-0"><?= $totalProdutos ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 h-100">
+                <div class="card-body">
+                    <span class="text-muted">Preço médio do catálogo</span>
+                    <h4 class="mb-0">R$ <?= number_format($ticketMedio, 2, ',', '.') ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 h-100">
+                <div class="card-body">
+                    <span class="text-muted">Itens premium (>= R$ 1.000)</span>
+                    <h4 class="mb-0"><?= $catalogoAltoValor ?></h4>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-primary">Produtos</h2>
         <a href="index.php?rota=produto_form" class="btn btn-success">➕ Novo Produto</a>

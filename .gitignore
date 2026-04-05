@@ -1,1 +1,4 @@
 structure.lua
+.env
+.env.local
+.env.*.local

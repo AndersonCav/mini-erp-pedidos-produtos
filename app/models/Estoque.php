@@ -1,14 +1,38 @@
 <?php
-    require_once '../config/database.php';
-    class Estoque {
-        public static function reduzir($produto_id, $quantidade) {
-            global $conn;
-            $conn->query("UPDATE estoques SET quantidade = quantidade - $quantidade WHERE produto_id = $produto_id");
+/**
+ * Estoque.php (REFATORADO)
+ * Model mantido por compatibilidade, delega para StockService
+ */
+
+require_once __DIR__ . '/../services/StockService.php';
+
+class Estoque {
+    private static $service;
+
+    private static function getService() {
+        if (!self::$service) {
+            self::$service = new StockService();
         }
-        public static function temEstoque($produto_id, $quantidade) {
-            global $conn;
-            $res = $conn->query("SELECT quantidade FROM estoques WHERE produto_id = $produto_id");
-            $dados = $res->fetch_assoc();
-            return $dados && $dados['quantidade'] >= $quantidade;
+        return self::$service;
+    }
+
+    /**
+     * Reduz quantidade em estoque
+     * Nota: Agora recebe variacao_id corretamente
+     */
+    public static function reduzir($produto_id, $quantidade, $variacao_id = null) {
+        try {
+            self::getService()->reserve($produto_id, $quantidade, $variacao_id);
+        } catch (Exception $e) {
+            Logger::error('Stock reduction error: ' . $e->getMessage());
+            throw $e;
         }
     }
+
+    /**
+     * Verifica se tem estoque
+     */
+    public static function temEstoque($produto_id, $quantidade, $variacao_id = null) {
+        return self::getService()->isAvailable($produto_id, $quantidade, $variacao_id);
+    }
+}

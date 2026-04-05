@@ -1,10 +1,16 @@
 <?php
-    $host = 'localhost';
-    $dbname = 'mini_erp';
-    $usuario = 'root';
-    $senha = '';
-    $conn = new mysqli($host, $usuario, $senha, $dbname);
-    if ($conn->connect_error) {
-        die("Erro ao conectar com o banco de dados: " . $conn->connect_error);
-    }
-    $conn->set_charset("utf8");
+/**
+ * database.php (LEGADO - Mantido para compatibilidade)
+ * Use config/bootstrap.php para nova inicialização
+ */
+
+// Compatibilidade com código antigo
+if (!isset($GLOBALS['db'])) {
+    require_once __DIR__ . '/bootstrap.php';
+}
+
+// Mantém global $conn para compatibilidade com código existente
+$conn = $GLOBALS['conn'] ?? null;
+if (!$conn) {
+    die("Erro ao conectar com o banco de dados");
+}
