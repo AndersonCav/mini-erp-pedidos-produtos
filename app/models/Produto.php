@@ -1,7 +1,7 @@
 <?php
 /**
- * Produto.php (REFATORADO)
- * Model mantido por compatibilidade, agora delega para Repository + Service
+ * Produto.php
+ * Adaptador de modelo para operações de produto
  */
 
 require_once __DIR__ . '/../repositories/ProductRepository.php';
@@ -118,14 +118,7 @@ class Produto {
      * Busca produto com todas as variações e estoques
      */
     public static function todosComEstoque() {
-        global $conn;
-        $sql = "SELECT p.id AS produto_id, p.nome, v.id AS variacao_id, v.nome AS variacao, e.quantidade 
-                FROM produtos p 
-                LEFT JOIN variacoes v ON v.produto_id = p.id 
-                LEFT JOIN estoques e ON e.produto_id = p.id 
-                   AND (e.variacao_id = v.id OR (v.id IS NULL AND e.variacao_id IS NULL)) 
-                ORDER BY p.nome, v.nome";
-        return $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
+        return self::getStockService()->findPaginated(1000, 0, 'p.nome ASC', '');
     }
 
     /**

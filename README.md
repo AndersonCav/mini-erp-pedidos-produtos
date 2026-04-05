@@ -1,129 +1,294 @@
-# 🛒 Mini ERP - Pedidos, Produtos, Cupons e Estoque
+# Mini ERP Commerce
 
-Sistema simples desenvolvido em PHP puro com padrão MVC para gerenciamento de produtos, pedidos, cupons e estoque. Projeto realizado como parte de um teste técnico.
+Mini ERP de ecommerce construído com PHP puro (MVC artesanal), MySQL, Bootstrap e JavaScript.
 
-## 🚀 Tecnologias Utilizadas
+O projeto gerencia produtos, variações, estoque, cupons e pedidos com foco em regras reais de operação e segurança básica de produção para um portfólio técnico.
 
-- PHP 8+
-- MySQL
-- Bootstrap 5 (UI responsiva)
-- JavaScript (Fetch API, validações e interações)
-- HTML5 / CSS3
-- Sessão PHP para controle de carrinho
-- Envio de e-mail com função `mail()`
-- Consumo da API ViaCEP
+## Visão geral
 
-## 📦 Funcionalidades
+Este sistema cobre o fluxo completo:
 
-- CRUD de Produtos com suporte a variações (ex: tamanhos, cores)
-- Controle de Estoque por produto e por variação
-- Adição ao Carrinho com controle de estoque
-- Cálculo de frete conforme regras:
-  - Subtotal entre R$52 e R$166,59: R$15
-  - Subtotal acima de R$200: Frete grátis
-  - Demais casos: R$20
-- Aplicação de Cupons com regras de validade e subtotal mínimo
-- Finalização do Pedido com envio de e-mail e consumo da API ViaCEP
-- Webhook para alteração e exclusão de pedidos via integração externa
-- Listagem e gerenciamento de Pedidos e Cupons com filtros e paginação
+- cadastro e manutenção de produtos com variações
+- gestão de estoque por produto e por variação
+- carrinho de compras em sessão
+- cálculo de subtotal, frete, desconto e total
+- aplicação de cupons com validação de validade e subtotal mínimo
+- criação de pedidos com persistência dos itens
+- alteração de status e cancelamento com reversão de estoque
+- endpoint de webhook autenticado por token
 
----
+## Stack
 
-## ⚙️ Instalação
+- PHP 7.4+
+- MySQL 5.7+ ou MariaDB 10.3+
+- Bootstrap 5
+- JavaScript (Fetch API)
+- MVC artesanal (sem framework pesado)
 
-1. **Clone o repositório:**
+## Funcionalidades principais
+
+- Produtos:
+- CRUD de produtos
+- upload de imagem
+- suporte a variações
+
+- Estoque:
+- estoque para produto simples
+- estoque para variações
+- atualização por tela administrativa
+
+- Cupons:
+- cadastro e edição
+- validação por data
+- validação por subtotal mínimo
+
+- Pedidos:
+- fechamento de pedido em transação
+- persistência de itens em tabela dedicada
+- alteração de status com validação
+- cancelamento com reversão de estoque
+
+- Segurança:
+- prepared statements em repositories
+- CSRF em ações sensíveis
+- validação de payload no webhook
+- autenticação por header X-Webhook-Token
+- logs centralizados
+
+## Arquitetura atual
+
+Estrutura principal:
+
+- config/: bootstrap, constantes, configuração
+- app/core/: Database, Request, Response, Logger
+- app/repositories/: persistência de dados (prepared statements)
+- app/services/: regras de negócio
+- app/controllers/: orquestração HTTP
+- app/validators/: validação de domínio e inputs
+- app/views/: templates
+- routes/: roteamento principal
+- public/: entrypoint e assets
+- database/: schema e scripts
+
+Responsabilidades:
+
+- Controller: recebe requisição, valida entrada, chama service, responde
+- Service: regra de negócio, fluxo transacional
+- Repository: SQL e persistência
+- Validator: validação de campos e regras básicas
+
+## Instalação
+
+1. Clone o repositório
+
 ```bash
-git clone https://github.com/AndersonC96/mini-erp-pedidos-produtos.git
+git clone https://github.com/AndersonCav/mini-erp-pedidos-produtos.git
 cd mini-erp-pedidos-produtos
 ```
 
-2. **Configure o banco de dados MySQL:**
+2. Configure ambiente
 
-- Crie um banco chamado mini_erp (ou outro nome de sua preferência)
-- Importe o SQL abaixo:
 ```bash
-CREATE TABLE produtos (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  preco DECIMAL(10,2) NOT NULL,
-  imagem_url VARCHAR(255)
-);
-
-CREATE TABLE variacoes (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  produto_id INT NOT NULL,
-  nome VARCHAR(255) NOT NULL,
-  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
-);
-
-CREATE TABLE estoques (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  produto_id INT NOT NULL,
-  variacao_id INT DEFAULT NULL,
-  quantidade INT NOT NULL DEFAULT 0,
-  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
-  FOREIGN KEY (variacao_id) REFERENCES variacoes(id) ON DELETE CASCADE
-);
-
-CREATE TABLE cupons (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  valor_desconto DECIMAL(10,2) NOT NULL,
-  minimo_subtotal DECIMAL(10,2) NOT NULL,
-  validade DATE NOT NULL
-);
-
-CREATE TABLE pedidos (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  produtos_texto TEXT,
-  total DECIMAL(10,2),
-  status VARCHAR(20) DEFAULT 'pendente',
-  cep VARCHAR(9),
-  endereco TEXT,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+cp .env.example .env
 ```
 
-3. **Configure o acesso ao banco:**
+Edite o arquivo .env:
 
-Edite o arquivo config/database.php:
-```bash
-<?php
-    $conn = new mysqli('localhost', 'usuario', 'senha', 'mini_erp');
-    if ($conn->connect_error) {
-        die('Erro ao conectar ao banco: ' . $conn->connect_error);
-    }
-?>
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=mini_erp
+APP_DEBUG=false
+TIMEZONE=America/Sao_Paulo
+ADMIN_EMAIL=admin@mini-erp.com.br
+WEBHOOK_TOKEN=troque_por_um_token_forte
 ```
 
-4. Inicie o servidor local:
+Para gerar token seguro:
 
-Se estiver usando PHP nativo:
+```bash
+php -r "echo bin2hex(random_bytes(32));"
+```
+
+3. Crie banco e tabelas
+
+Opção A (manual):
+
+```sql
+CREATE DATABASE mini_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Depois importe:
+
+```bash
+mysql -u root mini_erp < database/schema.sql
+```
+
+Opção B (script auxiliar):
+
+```bash
+php database/run-schema.php
+```
+
+Para banco já existente (sem recriar tudo), aplique também a migration:
+
+```bash
+mysql -u root mini_erp < database/migrations/20260405_add_order_items_and_order_columns.sql
+```
+
+4. Execute localmente
+
 ```bash
 php -S localhost:8000 -t public/
 ```
-> Ou acesse via XAMPP em `http://localhost/mini-erp-pedidos-produtos/public/index.php`.
 
-## 🧪 Webhook
+Acesse:
 
-O sistema expõe um endpoint index.php?rota=webhook que aceita POST com os seguintes campos:
-`id`: ID do pedido
-`status`: novo status (finalizado, cancelado, etc.)
+- http://localhost:8000
 
-### Comportamento:
+## Banco de dados
 
-Se `status = cancelado`, o pedido é excluído
-Senão, o status do pedido é atualizado
+Schema oficial:
 
-## 📸 Demonstração
+- database/schema.sql
 
-- Cadastro de Produtos
-![Cadastro de produtos](https://raw.githubusercontent.com/AndersonC96/mini-erp-pedidos-produtos/main/public/public/uploads/produtos.png)
-- Carrinho
-![Carrinho](https://raw.githubusercontent.com/AndersonC96/mini-erp-pedidos-produtos/main/public/public/uploads/carrinho.png)
-- Aplicação de cupom
-![Cupom](https://raw.githubusercontent.com/AndersonC96/mini-erp-pedidos-produtos/main/public/public/uploads/carrinho.png)
-- Pedidos e cupons
-    - ![Pedidos](https://raw.githubusercontent.com/AndersonC96/mini-erp-pedidos-produtos/main/public/public/uploads/pedidos.png)
-    - ![Cupom](https://raw.githubusercontent.com/AndersonC96/mini-erp-pedidos-produtos/main/public/public/uploads/cupom.png)
+Tabelas principais:
 
+- produtos
+- variacoes
+- estoques
+- cupons
+- pedidos
+- pedido_itens
+- logs
+
+Observações importantes:
+
+- pedidos mantém snapshot textual (produtos_texto) para visualização
+- pedido_itens mantém estrutura detalhada para auditoria e reversão de estoque
+- cancelamento usa pedido_itens para devolver quantidades ao estoque
+
+## Webhook seguro
+
+Endpoint:
+
+- POST /index.php?rota=webhook
+
+Headers obrigatórios:
+
+- Content-Type: application/json
+- X-Webhook-Token: token definido em WEBHOOK_TOKEN
+
+Payload mínimo:
+
+```json
+{
+  "id": 123,
+  "status": "cancelado"
+}
+```
+
+Status aceitos:
+
+- pendente
+- processando
+- enviado
+- entregue
+- cancelado
+- devolvido
+
+Alias aceitos no webhook:
+
+- cancelled -> cancelado
+- processing -> processando
+- shipped -> enviado
+- completed -> entregue
+- pending -> pendente
+
+Exemplo curl:
+
+```bash
+curl -X POST "http://localhost:8000/index.php?rota=webhook" \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Token: SEU_TOKEN" \
+  -d '{"id":1,"status":"cancelado"}'
+```
+
+Resposta JSON padrão:
+
+```json
+{
+  "success": true,
+  "message": "Pedido cancelado com sucesso",
+  "data": {
+    "orderId": 1,
+    "status": "cancelado"
+  }
+}
+```
+
+## Checklist de testes manuais
+
+Use também CHECKLIST_TESTS.md para roteiro completo.
+
+Cenários mínimos:
+
+- cadastrar produto
+- cadastrar variação
+- cadastrar cupom
+- atualizar estoque
+- adicionar ao carrinho
+- aplicar cupom válido
+- rejeitar cupom inválido
+- finalizar pedido
+- alterar status de pedido
+- cancelar pedido com reversão de estoque
+- chamar webhook com token válido
+- rejeitar webhook sem token
+- rejeitar webhook com status inválido
+
+## Smoke test rápido
+
+Script para validação de sanidade do projeto:
+
+```bash
+php scripts/smoke-test.php
+```
+
+Para validar também fluxo real de negócio com escrita temporária (cria pedido e cancela com reversão de estoque):
+
+```bash
+php scripts/smoke-test.php --write
+```
+
+## Limitações atuais
+
+- autenticação/autorização administrativa não implementada
+- envio de e-mail usa mail() (adequado para ambiente simples, não ideal para produção)
+- cobertura de testes automatizados ainda não completa
+- sem fila para reprocessamento de webhook
+
+## Melhorias futuras
+
+- autenticação com controle de acesso por perfil
+- testes automatizados de integração e domínio
+- provider de e-mail transacional (SMTP/API)
+- paginação e filtros avançados no módulo de pedidos
+- trilha de auditoria de alterações de status
+- idempotência de webhook por chave de evento
+
+## Qualidade e segurança
+
+O projeto foi estruturado para manter stack simples com boas práticas:
+
+- prepared statements
+- separação em camadas (controllers/services/repositories)
+- validação de entrada
+- CSRF em ações sensíveis
+- webhook autenticado
+- logs de eventos e falhas
+
+## Licença
+
+MIT

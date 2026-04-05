@@ -17,6 +17,7 @@ require_once '../app/repositories/VariationRepository.php';
 require_once '../app/repositories/StockRepository.php';
 require_once '../app/repositories/CouponRepository.php';
 require_once '../app/repositories/OrderRepository.php';
+require_once '../app/repositories/OrderItemRepository.php';
 
 // Carrega services
 require_once '../app/services/ShippingService.php';

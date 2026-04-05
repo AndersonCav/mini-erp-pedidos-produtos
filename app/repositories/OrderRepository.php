@@ -33,6 +33,8 @@ class OrderRepository {
      * Busca pedidos com filtros e paginação
      */
     public function findFiltered($search = '', $status = '', $orderBy = 'criado_em DESC', $limit = 10, $offset = 0) {
+        $orderBy = $this->sanitizeOrderBy($orderBy);
+
         $whereConditions = [];
         $params = [];
         $types = '';
@@ -58,6 +60,17 @@ class OrderRepository {
 
         $result = $this->db->execute($query, $params, $types);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    private function sanitizeOrderBy($orderBy) {
+        $allowed = [
+            'criado_em DESC',
+            'criado_em ASC',
+            'total DESC',
+            'total ASC',
+        ];
+
+        return in_array($orderBy, $allowed, true) ? $orderBy : 'criado_em DESC';
     }
 
     /**
@@ -91,14 +104,14 @@ class OrderRepository {
     /**
      * Cria novo pedido
      */
-    public function create($subtotal, $shipping, $discount, $total, $status, $cep, $address, $productsText, $coupon = null) {
-        $query = "INSERT INTO pedidos (subtotal, frete, desconto, total, status, cep, endereco, produtos_texto, cupom_usado, criado_em) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    public function create($subtotal, $shipping, $discount, $total, $status, $cep, $address, $productsText, $coupon = null, $customerEmail = null) {
+        $query = "INSERT INTO pedidos (subtotal, frete, desconto, total, status, cliente_email, cep, endereco, produtos_texto, cupom_usado, criado_em) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         
         $this->db->executeUpdate(
             $query,
-            [$subtotal, $shipping, $discount, $total, $status, $cep, $address, $productsText, $coupon],
-            'ddddsssss'
+            [$subtotal, $shipping, $discount, $total, $status, $customerEmail, $cep, $address, $productsText, $coupon],
+            'ddddssssss'
         );
         return $this->db->getLastInsertId();
     }
@@ -109,6 +122,14 @@ class OrderRepository {
     public function updateStatus($id, $status) {
         $query = "UPDATE pedidos SET status = ? WHERE id = ?";
         return $this->db->executeUpdate($query, [$status, $id], 'si');
+    }
+
+    /**
+     * Marca pedido como cancelado com timestamp
+     */
+    public function markAsCancelled($id) {
+        $query = "UPDATE pedidos SET status = 'cancelado', cancelado_em = NOW() WHERE id = ?";
+        return $this->db->executeUpdate($query, [$id], 'i');
     }
 
     /**

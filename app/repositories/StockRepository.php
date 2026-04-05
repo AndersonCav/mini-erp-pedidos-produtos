@@ -91,6 +91,8 @@ class StockRepository {
      * Busca todos os estoques com filtros e paginação
      */
     public function findPaginated($limit, $offset, $orderBy = 'p.nome ASC', $search = '') {
+        $orderBy = $this->sanitizeOrderBy($orderBy);
+
         $whereClause = '';
         $params = [];
         $types = '';
@@ -120,6 +122,17 @@ class StockRepository {
 
         $result = $this->db->execute($query, $params, $types);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    private function sanitizeOrderBy($orderBy) {
+        $allowed = [
+            'p.nome ASC',
+            'p.nome DESC',
+            'e.quantidade ASC',
+            'e.quantidade DESC',
+        ];
+
+        return in_array($orderBy, $allowed, true) ? $orderBy : 'p.nome ASC';
     }
 
     /**

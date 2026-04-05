@@ -1,7 +1,7 @@
 <?php
 /**
- * Estoque.php (REFATORADO)
- * Model mantido por compatibilidade, delega para StockService
+ * Estoque.php
+ * Adaptador de modelo para operações de estoque
  */
 
 require_once __DIR__ . '/../services/StockService.php';

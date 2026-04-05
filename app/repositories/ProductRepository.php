@@ -33,6 +33,8 @@ class ProductRepository {
      * Busca produtos com paginação e filtro
      */
     public function findPaginated($limit, $offset, $orderBy = 'nome ASC', $search = '') {
+        $orderBy = $this->sanitizeOrderBy($orderBy);
+
         $whereClause = '';
         $params = [];
         $types = '';
@@ -50,6 +52,11 @@ class ProductRepository {
 
         $result = $this->db->execute($query, $params, $types);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    private function sanitizeOrderBy($orderBy) {
+        $allowed = ['nome ASC', 'nome DESC', 'preco ASC', 'preco DESC'];
+        return in_array($orderBy, $allowed, true) ? $orderBy : 'nome ASC';
     }
 
     /**

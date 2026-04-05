@@ -6,6 +6,7 @@
                 🛒 <?= isset($produto['id']) ? 'Editar Produto' : 'Cadastro de Produto' ?>
             </h3>
             <form method="POST" action="index.php?rota=<?= isset($produto['id']) ? 'produto_atualizar' : 'produto_salvar' ?>" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
                 <?php if (!empty($produto['id'])): ?>
                     <input type="hidden" name="id" value="<?= $produto['id'] ?>">
                 <?php endif; ?>

@@ -76,14 +76,8 @@
             (new CupomController())->excluir();
             break;
         case 'atualizar_qtd':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $item = $_POST['item'];
-                $qtd = max(1, intval($_POST['quantidade']));
-                $_SESSION['carrinho'][$item] = $qtd;
-                $_SESSION['mensagem'] = "Quantidade atualizada com sucesso!";
-            }
-            header('Location: index.php?rota=carrinho');
-            exit;
+            (new PedidoController())->atualizarQuantidade();
+            break;
         default:
             http_response_code(404);
             echo "<h1>404 - Página não encontrada</h1>";

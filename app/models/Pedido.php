@@ -1,7 +1,7 @@
 <?php
 /**
- * Pedido.php (REFATORADO)
- * Model mantido por compatibilidade, delega para OrderService + OrderRepository
+ * Pedido.php
+ * Adaptador de modelo para operações de pedido
  */
 
 require_once __DIR__ . '/../services/OrderService.php';
@@ -20,9 +20,9 @@ class Pedido {
     /**
      * Cria novo pedido (usa nova lógica centralizada em OrderService)
      */
-    public static function criar($carrinho, $cep, $endereco, $cupom = null) {
+    public static function criar($carrinho, $cep, $endereco, $cupom = null, $email = null) {
         try {
-            $result = self::getService()->create($carrinho, $cep, $endereco, 'pendente', $cupom);
+            $result = self::getService()->create($carrinho, $cep, $endereco, 'pendente', $cupom, $email);
             if ($result['success']) {
                 return $result['orderId'];
             } else {

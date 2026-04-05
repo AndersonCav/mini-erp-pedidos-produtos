@@ -49,7 +49,15 @@ if (!isset($_ENV['DB_HOST'])) {
 
 // Configuração de sessão
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Lax');
     session_start();
+
+    if (empty($_SESSION['_session_initialized'])) {
+        session_regenerate_id(true);
+        $_SESSION['_session_initialized'] = true;
+    }
 }
 
 // Configuração de timezone
@@ -59,6 +67,8 @@ date_default_timezone_set($_ENV['TIMEZONE'] ?? 'America/Sao_Paulo');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-XSS-Protection: 1; mode=block');
+header("Referrer-Policy: strict-origin-when-cross-origin");
+header("Content-Security-Policy: default-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://viacep.com.br; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https://viacep.com.br");
 
 // Carrega constantes
 require_once __DIR__ . '/constants.php';

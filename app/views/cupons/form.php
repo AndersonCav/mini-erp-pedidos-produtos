@@ -13,6 +13,7 @@
                 <?php unset($_SESSION['mensagem']); ?>
             <?php endif; ?>
             <form method="POST" action="index.php?rota=cupom_salvar">
+                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
                 <div class="mb-3">
                     <label class="form-label">🆔 Código do Cupom</label>
                     <input type="text" name="codigo" class="form-control shadow-sm" required

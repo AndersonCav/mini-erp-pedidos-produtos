@@ -33,6 +33,8 @@ class CouponRepository {
      * Busca cupons com filtro e ordenação
      */
     public function findFiltered($search = '', $orderBy = 'validade DESC') {
+        $orderBy = $this->sanitizeOrderBy($orderBy);
+
         if (!empty($search)) {
             $query = "SELECT * FROM cupons WHERE codigo LIKE ? ORDER BY $orderBy";
             $result = $this->db->execute($query, ["%$search%"], 's');
@@ -42,6 +44,17 @@ class CouponRepository {
         }
 
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    private function sanitizeOrderBy($orderBy) {
+        $allowed = [
+            'validade DESC',
+            'validade ASC',
+            'valor_desconto DESC',
+            'valor_desconto ASC',
+        ];
+
+        return in_array($orderBy, $allowed, true) ? $orderBy : 'validade DESC';
     }
 
     /**

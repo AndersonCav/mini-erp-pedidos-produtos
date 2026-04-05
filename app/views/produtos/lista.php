@@ -75,12 +75,7 @@
     <?php if (!empty($produtos)) : ?>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             <?php foreach ($produtos as $produto): ?>
-                <?php
-                    require_once '../config/database.php';
-                    global $conn;
-                    $resVar = $conn->query("SELECT id, nome FROM variacoes WHERE produto_id = " . $produto['id']);
-                    $variacoes = $resVar->fetch_all(MYSQLI_ASSOC);
-                ?>
+                <?php $variacoes = $variacoesPorProduto[$produto['id']] ?? []; ?>
                 <div class="col">
                     <div class="card shadow-sm border-0 h-100">
                         <?php if (!empty($produto['imagem_url'])): ?>
@@ -94,6 +89,7 @@
                             <h5 class="card-title text-primary"><?= htmlspecialchars($produto['nome']) ?></h5>
                             <p class="card-text fw-semibold mb-2">R$ <?= number_format($produto['preco'], 2, ',', '.') ?></p>
                             <form action="index.php?rota=adicionar_carrinho" method="POST" class="mb-2">
+                                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
                                 <input type="hidden" name="produto_id" value="<?= $produto['id'] ?>">
                                 <?php if (!empty($variacoes)): ?>
                                     <select name="variacao_id" class="form-select form-select-sm mb-2">
@@ -110,7 +106,8 @@
                             <div class="d-flex flex-wrap gap-2 mt-auto">
                                 <a href="index.php?rota=produto_editar&id=<?= $produto['id'] ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
                                 <?php if (!empty($variacoes)): ?>
-                                    <form method="GET" action="index.php" onsubmit="return confirm('Deseja mesmo excluir esta variação?')">
+                                    <form method="POST" action="index.php?rota=variacao_excluir" onsubmit="return confirm('Deseja mesmo excluir esta variação?')">
+                                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
                                         <input type="hidden" name="rota" value="variacao_excluir">
                                         <div class="input-group input-group-sm">
                                             <select name="id" class="form-select">
@@ -122,7 +119,11 @@
                                         </div>
                                     </form>
                                 <?php else: ?>
-                                    <a href="index.php?rota=produto_excluir&id=<?= $produto['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir este produto?')">🗑️ Excluir</a>
+                                    <form method="POST" action="index.php?rota=produto_excluir" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este produto?')">
+                                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
+                                        <input type="hidden" name="id" value="<?= $produto['id'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm">🗑️ Excluir</button>
+                                    </form>
                                 <?php endif ?>
                             </div>
                         </div>

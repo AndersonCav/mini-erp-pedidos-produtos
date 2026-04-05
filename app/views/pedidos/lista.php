@@ -72,6 +72,7 @@
                             <td><?= date('d/m/Y H:i', strtotime($p['criado_em'])) ?></td>
                             <td>
                                 <form method="POST" action="index.php?rota=pedido_alterar_status" class="d-flex align-items-center">
+                                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
                                     <input type="hidden" name="pedido_id" value="<?= $p['id'] ?>">
                                     <select name="status" class="form-select form-select-sm me-2">
                                         <?php

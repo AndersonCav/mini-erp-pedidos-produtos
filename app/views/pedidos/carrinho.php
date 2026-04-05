@@ -3,12 +3,7 @@
     <div class="card-body">
         <h3 class="card-title text-primary mb-3">🎒 Meu Carrinho</h3>
         <?php
-            require_once '../config/database.php';
             require_once '../app/helpers/functions.php';
-            require_once '../app/models/Cupom.php';
-            global $conn;
-            $carrinho = $_SESSION['carrinho'] ?? [];
-            $subtotal = 0;
             $frete = 0;
             $desconto = 0;
             $mensagem_cupom = '';
@@ -21,6 +16,7 @@
             <?php unset($_SESSION['mensagem']); ?>
         <?php endif; ?>
         <form method="POST" action="index.php?rota=finalizar_pedido" id="form-finalizar">
+            <input type="hidden" name="_csrf_token" id="csrf-token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
             <div class="table-responsive mb-3">
                 <table class="table table-hover align-middle shadow-sm">
                     <thead class="table-light">
@@ -33,40 +29,15 @@
                         </tr>
                     </thead>
                     <tbody id="carrinho-tabela">
-                        <?php foreach ($carrinho as $chave => $qtd): ?>
-                            <?php
-                                $partes = explode(':', $chave);
-                                $produto_id = intval($partes[0]);
-                                $variacao_id = isset($partes[1]) ? intval($partes[1]) : null;
-                                if ($variacao_id) {
-                                    $estoque_res = $conn->query("SELECT quantidade FROM estoques WHERE produto_id = $produto_id AND variacao_id = $variacao_id");
-                                    $estoque = $estoque_res->fetch_assoc()['quantidade'] ?? 0;
-                                } else {
-                                    $estoque_res = $conn->query("SELECT quantidade FROM estoques WHERE produto_id = $produto_id AND variacao_id IS NULL");
-                                    $estoque = $estoque_res->fetch_assoc()['quantidade'] ?? 0;
-                                }
-                                $sql = "SELECT p.nome, p.preco";
-                                if ($variacao_id) $sql .= ", v.nome AS variacao_nome";
-                                $sql .= " FROM produtos p";
-                                if ($variacao_id) $sql .= " LEFT JOIN variacoes v ON v.id = $variacao_id";
-                                $sql .= " WHERE p.id = $produto_id";
-                                $res = $conn->query($sql);
-                                $produto = $res->fetch_assoc();
-                                $nome_produto = $produto['nome'];
-                                if (!empty($produto['variacao_nome'])) {
-                                    $nome_produto .= ' - ' . $produto['variacao_nome'];
-                                }
-                                $total = $produto['preco'] * $qtd;
-                                $subtotal += $total;
-                            ?>
-                            <tr data-key="<?= htmlspecialchars($chave) ?>" data-estoque="<?= $estoque ?>">
-                                <td><?= htmlspecialchars($nome_produto) ?></td>
+                        <?php foreach (($cartDetails ?? []) as $item): ?>
+                            <tr data-key="<?= htmlspecialchars($item['key']) ?>" data-estoque="<?= (int) $item['estoque'] ?>">
+                                <td><?= htmlspecialchars($item['nome']) ?></td>
                                 <td>
-                                    <input type="number" min="1" max="<?= $estoque ?>" value="<?= $qtd ?>" class="form-control form-control-sm qtd-input" style="width: 70px;">
-                                    <span class="badge bg-light text-dark d-block mt-1 estoque-info" style="font-size:12px;">Estoque: <?= $estoque ?></span>
+                                    <input type="number" min="1" max="<?= (int) $item['estoque'] ?>" value="<?= (int) $item['quantidade'] ?>" class="form-control form-control-sm qtd-input" style="width: 70px;">
+                                    <span class="badge bg-light text-dark d-block mt-1 estoque-info" style="font-size:12px;">Estoque: <?= (int) $item['estoque'] ?></span>
                                 </td>
-                                <td><?= formatarReais($produto['preco']) ?></td>
-                                <td class="total-item"><?= formatarReais($total) ?></td>
+                                <td><?= formatarReais($item['preco']) ?></td>
+                                <td class="total-item"><?= formatarReais($item['total']) ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-danger btn-remover">🖑</button>
                                 </td>
@@ -108,13 +79,18 @@
                 </div>
                 <div class="text-end">
                     <button type="button" class="btn btn-success btn-lg" onclick="confirmarFinalizacao()">✅ Finalizar Pedido</button>
-                    <a href="index.php?rota=limpar_carrinho" class="btn btn-outline-danger btn-lg ms-2">🪟 Esvaziar</a>
+                    <button type="button" class="btn btn-outline-danger btn-lg ms-2" onclick="limparCarrinho()">🪟 Esvaziar</button>
                 </div>
             </div>
+        </form>
+        <form method="POST" action="index.php?rota=limpar_carrinho" id="form-limpar-carrinho" class="d-none">
+            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
         </form>
     </div>
 </div>
 <script>
+    const csrfToken = document.getElementById('csrf-token').value;
+
     document.querySelectorAll('.qtd-input').forEach(input => {
         input.addEventListener('change', function () {
             const tr = this.closest('tr');
@@ -132,7 +108,7 @@
             fetch(`index.php?rota=atualizar_qtd`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `item=${encodeURIComponent(key)}&quantidade=${novaQtd}`
+                body: `_csrf_token=${encodeURIComponent(csrfToken)}&item=${encodeURIComponent(key)}&quantidade=${novaQtd}`
             }).then(() => {
                 recalcularTotais();
             });
@@ -150,7 +126,7 @@
         fetch(`index.php?rota=validar_cupom`, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: `cupom=${encodeURIComponent(cupom)}&subtotal=${subtotal}`
+            body: `_csrf_token=${encodeURIComponent(csrfToken)}&cupom=${encodeURIComponent(cupom)}&subtotal=${subtotal}`
         })
         .then(resp => resp.json())
         .then(data => {
@@ -192,7 +168,24 @@
             const nome = tr.querySelector('td').innerText;
             if (confirm(`Deseja realmente remover "${nome}" do carrinho?`)) {
                 const key = tr.dataset.key;
-                window.location.href = `index.php?rota=remover_item&item=${encodeURIComponent(key)}`;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'index.php?rota=remover_item';
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_csrf_token';
+                tokenInput.value = csrfToken;
+
+                const itemInput = document.createElement('input');
+                itemInput.type = 'hidden';
+                itemInput.name = 'item';
+                itemInput.value = key;
+
+                form.appendChild(tokenInput);
+                form.appendChild(itemInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     });
@@ -201,6 +194,13 @@
             document.getElementById('form-finalizar').submit();
         }
     }
+
+    function limparCarrinho() {
+        if (confirm('Deseja esvaziar todo o carrinho?')) {
+            document.getElementById('form-limpar-carrinho').submit();
+        }
+    }
+
     function recalcularTotais(forceDesconto = null) {
         const rows = document.querySelectorAll('#carrinho-tabela tr');
         let subtotal = 0;

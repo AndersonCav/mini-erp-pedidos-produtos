@@ -44,6 +44,7 @@
                                 <td><span class="badge bg-secondary"><?= $item['quantidade'] ?></span></td>
                                 <td>
                                     <form method="POST" action="index.php?rota=estoque_atualizar"onsubmit="return confirmarAtualizacao(this, '<?= htmlspecialchars($item['nome']) ?>', '<?= $item['variacao'] ?? 'Sem variação' ?>')"class="d-flex align-items-center">
+                                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
                                         <input type="hidden" name="produto_id" value="<?= $item['produto_id'] ?>">
                                         <input type="hidden" name="variacao_id" value="<?= $item['variacao_id'] ?? 0 ?>">
                                         <input type="number" name="quantidade" value="<?= $item['quantidade'] ?>" class="form-control form-control-sm me-2 shadow-sm rounded" style="width: 100px;">

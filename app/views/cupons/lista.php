@@ -55,9 +55,11 @@
                                 <a href="index.php?rota=cupom_editar&codigo=<?= urlencode($c['codigo']) ?>" class="btn btn-sm btn-warning me-1">
                                     ✏️ Editar
                                 </a>
-                                <a href="index.php?rota=cupom_excluir&codigo=<?= urlencode($c['codigo']) ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza que deseja excluir este cupom?')">
-                                    🗑️ Excluir
-                                </a>
+                                <form method="POST" action="index.php?rota=cupom_excluir" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este cupom?')">
+                                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(CsrfValidator::getToken()) ?>">
+                                    <input type="hidden" name="codigo" value="<?= htmlspecialchars($c['codigo']) ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Excluir</button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach ?>

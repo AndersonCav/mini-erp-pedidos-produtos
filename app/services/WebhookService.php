@@ -41,6 +41,14 @@ class WebhookService {
      */
     public function processPayload($payload) {
         try {
+            if (!is_array($payload)) {
+                return [
+                    'success' => false,
+                    'message' => 'Payload inválido: JSON esperado',
+                    'code' => 400
+                ];
+            }
+
             // Validação básica de estrutura
             if (!isset($payload['id']) || !isset($payload['status'])) {
                 return [
@@ -51,7 +59,17 @@ class WebhookService {
             }
 
             $orderId = intval($payload['id']);
-            $newStatus = strtolower(trim($payload['status']));
+            $rawStatus = strtolower(trim((string) $payload['status']));
+
+            $statusAliases = [
+                'cancelled' => 'cancelado',
+                'completed' => 'entregue',
+                'shipped' => 'enviado',
+                'processing' => 'processando',
+                'pending' => 'pendente',
+            ];
+
+            $newStatus = $statusAliases[$rawStatus] ?? $rawStatus;
 
             // Validação de ID
             if ($orderId <= 0) {
@@ -72,8 +90,17 @@ class WebhookService {
                 ];
             }
 
+            if (!in_array($newStatus, VALID_ORDER_STATUSES, true)) {
+                Logger::warning('Webhook invalid status: ' . $rawStatus);
+                return [
+                    'success' => false,
+                    'message' => 'Status inválido para atualização de pedido',
+                    'code' => 422
+                ];
+            }
+
             // Casos especiais de status
-            if ($newStatus === 'cancelado' || $newStatus === 'cancelled') {
+            if ($newStatus === 'cancelado') {
                 $result = $this->orderService->cancel($orderId);
                 if ($result['success']) {
                     return [

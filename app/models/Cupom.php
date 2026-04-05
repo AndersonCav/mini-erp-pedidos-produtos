@@ -1,7 +1,7 @@
 <?php
 /**
- * Cupom.php (REFATORADO)
- * Model mantido por compatibilidade, delega para Repository + Service
+ * Cupom.php
+ * Adaptador de modelo para operações de cupom
  */
 
 require_once __DIR__ . '/../repositories/CouponRepository.php';
